@@ -1022,24 +1022,23 @@
         }
       ];
   
-      // Initialize all collections
-      const init = (k, v=[]) => { if (!storage.has(k)) storage.set(k, v); };
-      init(KEYS.users, users);
-      init(KEYS.orgs, orgs);
-      init(KEYS.challenges, challenges);
-      init(KEYS.submissions, submissions);
-      init(KEYS.messages, messages);
-      init(KEYS.events, events);
-      init(KEYS.exhibitors, exhibitors);
-      init(KEYS.notifications, notifications);
-      init(KEYS.reputationEvents, reputationEvents);
-      init(KEYS.settings, {
+      // Initialize all collections (overwrite to ensure consistency during reseed)
+      storage.set(KEYS.users, users);
+      storage.set(KEYS.orgs, orgs);
+      storage.set(KEYS.challenges, challenges);
+      storage.set(KEYS.submissions, submissions);
+      storage.set(KEYS.messages, messages);
+      storage.set(KEYS.events, events);
+      storage.set(KEYS.exhibitors, exhibitors);
+      storage.set(KEYS.notifications, notifications);
+      storage.set(KEYS.reputationEvents, reputationEvents);
+      storage.set(KEYS.settings, {
         kiosk: false,
         countdownTarget: "2024-06-20T09:00:00Z", // TESTA start date
         theme: "light",
         language: "fa"
       });
-      init(KEYS.session, null);
+      storage.set(KEYS.session, null);
   
       // mark seeded
       localStorage.setItem(KEYS.seeded, "1");
@@ -1054,6 +1053,9 @@
         console.log('Users successfully stored:', storedUsers.map(u => ({email: u.email, role: u.role})));
       }
     }
+
+    // Expose seeding function for debug/reset actions
+    window.seedDataOnce = seedDataOnce;
   
     // ================================
     // --- HOOK: useLocalStorage(key) ---
@@ -2068,6 +2070,17 @@
           setLoading(false);
         }
       };
+
+      // Debug: verify component references
+      try {
+        console.debug('LoginForm render - component types:', {
+          FormField: typeof FormField,
+          TextInput: typeof TextInput,
+          ButtonLoader: typeof ButtonLoader
+        });
+      } catch (e) {
+        console.warn('LoginForm debug failed:', e);
+      }
 
       return (
         <div className="max-w-md mx-auto">
