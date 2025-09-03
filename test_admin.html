@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست سیستم مدیریت - TESTA</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function TestAdmin() {
+            const [testResults, setTestResults] = React.useState([]);
+            const [pendingUsers, setPendingUsers] = React.useState(0);
+            const [pendingOrgs, setPendingOrgs] = React.useState(0);
+
+            const runTests = () => {
+                const results = [];
+
+                // Test 1: Check if admin user exists
+                const users = localStorage.getItem('users');
+                if (users) {
+                    try {
+                        const usersData = JSON.parse(users);
+                        const admin = usersData.find(u => u.role === 'ADMIN');
+                        if (admin) {
+                            results.push({
+                                test: 'کاربر مدیر',
+                                status: `✓ ${admin.name} (${admin.email})`,
+                                color: 'text-green-600'
+                            });
+                        } else {
+                            results.push({
+                                test: 'کاربر مدیر',
+                                status: '✗ یافت نشد',
+                                color: 'text-red-600'
+                            });
+                        }
+                    } catch (e) {
+                        results.push({
+                            test: 'کاربر مدیر',
+                            status: '✗ خطا در بارگیری',
+                            color: 'text-red-600'
+                        });
+                    }
+                }
+
+                // Test 2: Check pending users and organizations
+                let pendingUserCount = 0;
+                let pendingOrgCount = 0;
+
+                if (users) {
+                    try {
+                        const usersData = JSON.parse(users);
+                        pendingUserCount = usersData.filter(u => u.status === 'pending' && u.role !== 'ADMIN').length;
+                        setPendingUsers(pendingUserCount);
+                    } catch (e) {
+                        console.error('Error parsing users:', e);
+                    }
+                }
+
+                const orgs = localStorage.getItem('orgs');
+                if (orgs) {
+                    try {
+                        const orgsData = JSON.parse(orgs);
+                        pendingOrgCount = orgsData.filter(o => o.status === 'pending').length;
+                        setPendingOrgs(pendingOrgCount);
+                    } catch (e) {
+                        console.error('Error parsing orgs:', e);
+                    }
+                }
+
+                results.push({
+                    test: 'کاربران در انتظار تأیید',
+                    status: `🔄 ${pendingUserCount} کاربر`,
+                    color: pendingUserCount > 0 ? 'text-yellow-600' : 'text-gray-600'
+                });
+
+                results.push({
+                    test: 'سازمان‌ها در انتظار تأیید',
+                    status: `🔄 ${pendingOrgCount} سازمان`,
+                    color: pendingOrgCount > 0 ? 'text-yellow-600' : 'text-gray-600'
+                });
+
+                // Test 3: Check notifications
+                const notifications = localStorage.getItem('notifications');
+                if (notifications) {
+                    try {
+                        const notificationsData = JSON.parse(notifications);
+                        const orgRequests = notificationsData.filter(n => n.type === 'org_request');
+                        results.push({
+                            test: 'اعلان‌های درخواست سازمان',
+                            status: `📬 ${orgRequests.length} اعلان`,
+                            color: 'text-blue-600'
+                        });
+                    } catch (e) {
+                        results.push({
+                            test: 'اعلان‌های درخواست سازمان',
+                            status: '✗ خطا',
+                            color: 'text-red-600'
+                        });
+                    }
+                }
+
+                setTestResults(results);
+            };
+
+            const createTestUser = () => {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const newUser = {
+                    id: `u-test-${Date.now()}`,
+                    role: 'SOLVER',
+                    email: `test${Date.now()}@example.com`,
+                    name: 'کاربر آزمایشی',
+                    password: '123456',
+                    avatar: null,
+                    bio: 'کاربر آزمایشی برای تست سیستم مدیریت',
+                    skills: ['تست', 'برنامه‌نویسی'],
+                    reputation: 0,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                runTests();
+                alert('کاربر آزمایشی ایجاد شد!');
+            };
+
+            const createTestOrg = () => {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const orgs = JSON.parse(localStorage.getItem('orgs') || '[]');
+                const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+
+                const newOrg = {
+                    id: `o-test-${Date.now()}`,
+                    name: 'سازمان آزمایشی',
+                    domains: ['تست', 'برنامه‌نویسی'],
+                    description: 'سازمان آزمایشی برای تست سیستم مدیریت',
+                    logo: null,
+                    website: 'https://test.com',
+                    contactInfo: {
+                        phone: '021-12345678',
+                        address: 'آدرس آزمایشی'
+                    },
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                const newUser = {
+                    id: `u-test-org-${Date.now()}`,
+                    role: 'SEEKER',
+                    email: `org-test${Date.now()}@example.com`,
+                    name: 'نماینده سازمان آزمایشی',
+                    password: '123456',
+                    orgId: newOrg.id,
+                    avatar: null,
+                    bio: `نماینده ${newOrg.name}`,
+                    skills: ['مدیریت', 'تعریف چالش'],
+                    reputation: 0,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                orgs.push(newOrg);
+                users.push(newUser);
+                notifications.push({
+                    id: `notif-test-${Date.now()}`,
+                    type: 'org_request',
+                    text: `درخواست تأیید سازمان جدید: ${newOrg.name} (${newUser.name})`,
+                    createdAt: new Date().toISOString(),
+                    read: false,
+                    userId: 'u-admin',
+                    targetId: newOrg.id
+                });
+
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('orgs', JSON.stringify(orgs));
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+
+                runTests();
+                alert('سازمان آزمایشی ایجاد شد!');
+            };
+
+            React.useEffect(() => {
+                runTests();
+            }, []);
+
+            return (
+                <div className="max-w-4xl mx-auto p-6">
+                    <header className="mb-6">
+                        <h1 className="text-2xl font-bold">تست سیستم مدیریت</h1>
+                        <p className="text-gray-600 mt-2">بررسی عملکرد تأیید کاربران و سازمان‌ها</p>
+                    </header>
+
+                    <main className="bg-white rounded-2xl shadow p-6 space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h2 className="font-semibold mb-4">وضعیت سیستم</h2>
+                                <div className="space-y-2">
+                                    {testResults.map((result, index) => (
+                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                            <span className="font-medium">{result.test}</span>
+                                            <span className={result.color}>{result.status}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h2 className="font-semibold mb-4">ایجاد داده‌های آزمایشی</h2>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={createTestUser}
+                                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                        ➕ ایجاد کاربر آزمایشی
+                                    </button>
+                                    <button
+                                        onClick={createTestOrg}
+                                        className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        🏢 ایجاد سازمان آزمایشی
+                                    </button>
+                                    <button
+                                        onClick={runTests}
+                                        className="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
+                                        🔄 بروزرسانی وضعیت
+                                    </button>
+                                </div>
+
+                                {(pendingUsers > 0 || pendingOrgs > 0) && (
+                                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                        <div className="text-sm text-yellow-800">
+                                            <strong>⚠️ داده‌های در انتظار تأیید:</strong>
+                                            <br />
+                                            • {pendingUsers} کاربر
+                                            <br />
+                                            • {pendingOrgs} سازمان
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="border-t pt-6">
+                            <h2 className="font-semibold mb-4">راهنمای تست</h2>
+                            <div className="space-y-4">
+                                <div className="p-4 bg-blue-50 rounded">
+                                    <h3 className="font-medium text-blue-800 mb-2">🔄 تست کامل تأیید:</h3>
+                                    <ol className="list-decimal pr-5 text-blue-700 text-sm space-y-1">
+                                        <li>روی "ایجاد سازمان آزمایشی" کلیک کنید</li>
+                                        <li>با حساب مدیر وارد شوید: admin@platform.ir / 123456</li>
+                                        <li>به پنل مدیریت بروید (#admin)</li>
+                                        <li>سازمان در انتظار تأیید را مشاهده کنید</li>
+                                        <li>روی "تأیید" کلیک کنید</li>
+                                        <li>وضعیت سازمان به "تأیید شده" تغییر کند</li>
+                                    </ol>
+                                </div>
+
+                                <div className="p-4 bg-green-50 rounded">
+                                    <h3 className="font-medium text-green-800 mb-2">👤 تست پروفایل:</h3>
+                                    <ol className="list-decimal pr-5 text-green-700 text-sm space-y-1">
+                                        <li>با حساب مدیر وارد شوید</li>
+                                        <li>به پنل مدیریت بروید</li>
+                                        <li>روی "مشاهده" کلیک کنید</li>
+                                        <li>پروفایل کامل کاربر نمایش داده شود</li>
+                                        <li>تمام اطلاعات پایه، مهارت‌ها و وضعیت نمایش داده شود</li>
+                                    </ol>
+                                </div>
+
+                                <div className="p-4 bg-purple-50 rounded">
+                                    <h3 className="font-medium text-purple-800 mb-2">📊 آمار سیستم:</h3>
+                                    <ul className="list-disc pr-5 text-purple-700 text-sm space-y-1">
+                                        <li>آمار کاربران کل، سازمان‌ها کل و در انتظار تأیید نمایش داده شود</li>
+                                        <li>پس از تأیید، آمار بروزرسانی شود</li>
+                                        <li>اعلان‌های جدید برای درخواست‌های سازمان ایجاد شود</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 className="font-medium text-yellow-800 mb-2">⚠️ نکات مهم:</h3>
+                            <ul className="list-disc pr-5 text-yellow-700 text-sm space-y-1">
+                                <li>کاربران جدید با وضعیت "pending" ایجاد می‌شوند</li>
+                                <li>سازمان‌های جدید نیاز به تأیید مدیر دارند</li>
+                                <li>پس از تأیید، کاربران می‌توانند وارد سیستم شوند</li>
+                                <li>درخواست‌های سازمان اعلان برای مدیر ایجاد می‌کنند</li>
+                                <li>پروفایل‌های کامل برای هر دو نوع کاربر نمایش داده می‌شود</li>
+                            </ul>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<TestAdmin />);
+    </script>
+</body>
+</html>

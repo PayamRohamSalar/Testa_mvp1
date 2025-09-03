@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست احراز هویت - TESTA</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function TestAuth() {
+            const [testResults, setTestResults] = React.useState([]);
+            const [currentUser, setCurrentUser] = React.useState(null);
+            
+            const runTests = () => {
+                const results = [];
+                
+                // Test 1: Check if session exists
+                const session = localStorage.getItem('session');
+                if (session && session !== 'null') {
+                    try {
+                        const sessionData = JSON.parse(session);
+                        results.push({ 
+                            test: 'فعال کردن نشست', 
+                            status: `✓ ${sessionData.name} (${sessionData.role})`, 
+                            color: 'text-green-600' 
+                        });
+                        setCurrentUser(sessionData);
+                    } catch (e) {
+                        results.push({ 
+                            test: 'فعال کردن نشست', 
+                            status: '✗ خطا در پردازش', 
+                            color: 'text-red-600' 
+                        });
+                    }
+                } else {
+                    results.push({ 
+                        test: 'فعال کردن نشست', 
+                        status: 'خارج از سیستم', 
+                        color: 'text-gray-600' 
+                    });
+                    setCurrentUser(null);
+                }
+                
+                // Test 2: Check demo accounts
+                const users = localStorage.getItem('users');
+                if (users) {
+                    try {
+                        const usersData = JSON.parse(users);
+                        const demoAccounts = usersData.filter(u => 
+                            ['admin@platform.ir', 'info@parstech.ir', 'a.mohammadi@university.ac.ir', 'sara.ahmadi@tech.ir'].includes(u.email)
+                        );
+                        results.push({ 
+                            test: 'حساب‌های نمونه', 
+                            status: `✓ ${demoAccounts.length} حساب موجود`, 
+                            color: 'text-green-600' 
+                        });
+                    } catch (e) {
+                        results.push({ 
+                            test: 'حساب‌های نمونه', 
+                            status: '✗ خطا در بارگیری', 
+                            color: 'text-red-600' 
+                        });
+                    }
+                } else {
+                    results.push({ 
+                        test: 'حساب‌های نمونه', 
+                        status: '✗ داده یافت نشد', 
+                        color: 'text-red-600' 
+                    });
+                }
+                
+                setTestResults(results);
+            };
+            
+            const logout = () => {
+                localStorage.setItem('session', 'null');
+                setCurrentUser(null);
+                runTests();
+            };
+            
+            React.useEffect(() => {
+                runTests();
+                
+                // Listen for storage changes
+                const handleStorageChange = (e) => {
+                    if (e.key === 'session') {
+                        runTests();
+                    }
+                };
+                
+                window.addEventListener('storage', handleStorageChange);
+                return () => window.removeEventListener('storage', handleStorageChange);
+            }, []);
+            
+            return (
+                <div className="max-w-4xl mx-auto p-6">
+                    <header className="mb-6">
+                        <h1 className="text-2xl font-bold">تست سیستم احراز هویت</h1>
+                        <p className="text-gray-600 mt-2">بررسی عملکرد ورود، خروج و مدیریت نشست</p>
+                    </header>
+                    
+                    <main className="bg-white rounded-2xl shadow p-6 space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h2 className="font-semibold mb-4">وضعیت جاری</h2>
+                                <div className="space-y-2">
+                                    {testResults.map((result, index) => (
+                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                            <span className="font-medium">{result.test}</span>
+                                            <span className={result.color}>{result.status}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                {currentUser && (
+                                    <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                                        <h3 className="font-medium text-green-800 mb-2">اطلاعات کاربر فعال:</h3>
+                                        <div className="text-sm text-green-700 space-y-1">
+                                            <div><strong>نام:</strong> {currentUser.name}</div>
+                                            <div><strong>نقش:</strong> {currentUser.role}</div>
+                                            <div><strong>ایمیل:</strong> {currentUser.email}</div>
+                                            {currentUser.orgId && <div><strong>سازمان:</strong> {currentUser.orgId}</div>}
+                                        </div>
+                                        <button
+                                            onClick={logout}
+                                            className="mt-3 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                                        >
+                                            خروج از سیستم
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div>
+                                <h2 className="font-semibold mb-4">راهنمای تست</h2>
+                                <div className="space-y-4 text-sm">
+                                    <div className="p-3 bg-blue-50 rounded">
+                                        <h3 className="font-medium text-blue-800 mb-2">تست ورود:</h3>
+                                        <ol className="list-decimal pr-5 text-blue-700 space-y-1">
+                                            <li>به <a href="index.html#login" className="underline">صفحه ورود</a> بروید</li>
+                                            <li>یکی از حساب‌های نمونه را انتخاب کنید</li>
+                                            <li>دکمه "ورود" را بزنید</li>
+                                            <li>به این صفحه برگردید و وضعیت را بررسی کنید</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <div className="p-3 bg-purple-50 rounded">
+                                        <h3 className="font-medium text-purple-800 mb-2">تست نقش‌ها:</h3>
+                                        <ul className="list-disc pr-5 text-purple-700 space-y-1">
+                                            <li><strong>مدیر:</strong> باید منوی "مدیریت" را ببیند</li>
+                                            <li><strong>جستجوگر:</strong> باید منوی "چالش‌های من" را ببیند</li>
+                                            <li><strong>حل‌کننده:</strong> باید منوی "پیشنهادات من" را ببیند</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div className="p-3 bg-green-50 rounded">
+                                        <h3 className="font-medium text-green-800 mb-2">تست ماندگاری:</h3>
+                                        <ol className="list-decimal pr-5 text-green-700 space-y-1">
+                                            <li>وارد سیستم شوید</li>
+                                            <li>صفحه را refresh کنید (F5)</li>
+                                            <li>باید همچنان وارد سیستم باشید</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="border-t pt-6">
+                            <h2 className="font-semibold mb-4">حساب‌های نمونه برای تست</h2>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="p-4 border rounded-lg">
+                                    <h3 className="font-medium text-blue-800 mb-2">👨‍💼 مدیر سیستم</h3>
+                                    <div className="text-sm text-gray-600">
+                                        <div><strong>ایمیل:</strong> admin@platform.ir</div>
+                                        <div><strong>رمز:</strong> 123456</div>
+                                        <div><strong>دسترسی:</strong> مدیریت کل سیستم</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="p-4 border rounded-lg">
+                                    <h3 className="font-medium text-green-800 mb-2">🏢 پارس‌تک (جستجوگر)</h3>
+                                    <div className="text-sm text-gray-600">
+                                        <div><strong>ایمیل:</strong> info@parstech.ir</div>
+                                        <div><strong>رمز:</strong> 123456</div>
+                                        <div><strong>دسترسی:</strong> انتشار چالش</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="p-4 border rounded-lg">
+                                    <h3 className="font-medium text-purple-800 mb-2">👨‍💻 امیر محمدی (حل‌کننده)</h3>
+                                    <div className="text-sm text-gray-600">
+                                        <div><strong>ایمیل:</strong> a.mohammadi@university.ac.ir</div>
+                                        <div><strong>رمز:</strong> 123456</div>
+                                        <div><strong>دسترسی:</strong> ارسال پیشنهاد</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="p-4 border rounded-lg">
+                                    <h3 className="font-medium text-pink-800 mb-2">👩‍💻 سارا احمدی (حل‌کننده)</h3>
+                                    <div className="text-sm text-gray-600">
+                                        <div><strong>ایمیل:</strong> sara.ahmadi@tech.ir</div>
+                                        <div><strong>رمز:</strong> 123456</div>
+                                        <div><strong>دسترسی:</strong> ارسال پیشنهاد</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 className="font-medium text-yellow-800 mb-2">⚠️ نکات مهم:</h3>
+                            <ul className="list-disc pr-5 text-yellow-700 text-sm space-y-1">
+                                <li>هر نقش منوی متفاوتی در نوار بالا نمایش می‌دهد</li>
+                                <li>بعد از ورود، نام کاربر در گوشه راست نمایش داده می‌شود</li>
+                                <li>دکمه خروج (🚪) در کنار نام کاربر قرار دارد</li>
+                                <li>وضعیت ورود با refresh صفحه حفظ می‌شود</li>
+                            </ul>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+        
+        ReactDOM.createRoot(document.getElementById("root")).render(<TestAuth />);
+    </script>
+</body>
+</html>

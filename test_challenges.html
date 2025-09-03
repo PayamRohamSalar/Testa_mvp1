@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست سیستم چالش‌ها - TESTA</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function TestChallenges() {
+            const [testResults, setTestResults] = React.useState([]);
+            const [challenges, setChallenges] = React.useState([]);
+            const [currentUser, setCurrentUser] = React.useState(null);
+
+            const runTests = () => {
+                const results = [];
+
+                // Test 1: Check if challenges exist
+                const challengesData = localStorage.getItem('challenges');
+                if (challengesData) {
+                    try {
+                        const parsed = JSON.parse(challengesData);
+                        setChallenges(parsed);
+                        results.push({
+                            test: 'چالش‌های موجود',
+                            status: `✓ ${parsed.length} چالش یافت شد`,
+                            color: 'text-green-600'
+                        });
+                    } catch (e) {
+                        results.push({
+                            test: 'چالش‌های موجود',
+                            status: '✗ خطا در بارگیری',
+                            color: 'text-red-600'
+                        });
+                    }
+                } else {
+                    results.push({
+                        test: 'چالش‌های موجود',
+                        status: '✗ داده‌ای یافت نشد',
+                        color: 'text-red-600'
+                    });
+                }
+
+                // Test 2: Check published challenges
+                if (challengesData) {
+                    try {
+                        const parsed = JSON.parse(challengesData);
+                        const published = parsed.filter(c => c.status === 'published');
+                        results.push({
+                            test: 'چالش‌های منتشر شده',
+                            status: `✓ ${published.length} چالش منتشر شده`,
+                            color: published.length > 0 ? 'text-green-600' : 'text-yellow-600'
+                        });
+                    } catch (e) {
+                        results.push({
+                            test: 'چالش‌های منتشر شده',
+                            status: '✗ خطا',
+                            color: 'text-red-600'
+                        });
+                    }
+                }
+
+                // Test 3: Check current user
+                const session = localStorage.getItem('session');
+                if (session && session !== 'null') {
+                    try {
+                        const sessionData = JSON.parse(session);
+                        setCurrentUser(sessionData);
+                        results.push({
+                            test: 'کاربر فعلی',
+                            status: `✓ ${sessionData.name} (${sessionData.role})`,
+                            color: 'text-green-600'
+                        });
+                    } catch (e) {
+                        results.push({
+                            test: 'کاربر فعلی',
+                            status: 'خارج از سیستم',
+                            color: 'text-gray-600'
+                        });
+                    }
+                } else {
+                    results.push({
+                        test: 'کاربر فعلی',
+                        status: 'خارج از سیستم',
+                        color: 'text-gray-600'
+                    });
+                }
+
+                // Test 4: Check user challenges (if seeker)
+                if (currentUser?.role === 'SEEKER' && challengesData) {
+                    try {
+                        const parsed = JSON.parse(challengesData);
+                        const userChallenges = parsed.filter(c => c.orgId === currentUser.orgId);
+                        results.push({
+                            test: 'چالش‌های کاربر',
+                            status: `✓ ${userChallenges.length} چالش متعلق به کاربر`,
+                            color: 'text-blue-600'
+                        });
+                    } catch (e) {
+                        results.push({
+                            test: 'چالش‌های کاربر',
+                            status: '✗ خطا',
+                            color: 'text-red-600'
+                        });
+                    }
+                }
+
+                setTestResults(results);
+            };
+
+            const createTestChallenge = () => {
+                const session = localStorage.getItem('session');
+                if (!session || session === 'null') {
+                    alert('ابتدا وارد سیستم شوید');
+                    window.open('index.html#login', '_blank');
+                    return;
+                }
+
+                const sessionData = JSON.parse(session);
+                if (sessionData.role !== 'SEEKER') {
+                    alert('فقط جستجوگران می‌توانند چالش ایجاد کنند');
+                    return;
+                }
+
+                const challenges = JSON.parse(localStorage.getItem('challenges') || '[]');
+                const newChallenge = {
+                    id: `c-test-${Date.now()}`,
+                    orgId: sessionData.orgId,
+                    title: 'چالش آزمایشی - سامانه هوشمند انرژی',
+                    problem: 'طراحی و پیاده‌سازی سامانه‌ای برای پایش و مدیریت مصرف انرژی در محیط‌های صنعتی با قابلیت پیش‌بینی مصرف و بهینه‌سازی خودکار.',
+                    success: 'دقت پایش حداقل ۹۵٪، کاهش مصرف انرژی ۲۰٪، گزارش‌گیری لحظه‌ای',
+                    deliverables: 'کد منبع، مستندات فنی، نمونه آزمایشی، گزارش نهایی',
+                    reward: 75000000,
+                    category: 'Energy',
+                    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+                    tags: ['انرژی', 'IoT', 'هوش مصنوعی', 'بهینه‌سازی'],
+                    attachments: [],
+                    status: 'published',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                challenges.push(newChallenge);
+                localStorage.setItem('challenges', JSON.stringify(challenges));
+                setChallenges(challenges);
+                runTests();
+                alert('چالش آزمایشی ایجاد شد!');
+            };
+
+            const clearTestChallenges = () => {
+                if (confirm('آیا مطمئن هستید که می‌خواهید چالش‌های آزمایشی را پاک کنید؟')) {
+                    const challenges = JSON.parse(localStorage.getItem('challenges') || '[]');
+                    const filtered = challenges.filter(c => !c.id.startsWith('c-test-'));
+                    localStorage.setItem('challenges', JSON.stringify(filtered));
+                    setChallenges(filtered);
+                    runTests();
+                    alert('چالش‌های آزمایشی پاک شدند!');
+                }
+            };
+
+            React.useEffect(() => {
+                runTests();
+            }, []);
+
+            return (
+                <div className="max-w-4xl mx-auto p-6">
+                    <header className="mb-6">
+                        <h1 className="text-2xl font-bold">تست سیستم چالش‌ها</h1>
+                        <p className="text-gray-600 mt-2">بررسی عملکرد ایجاد، ویرایش و نمایش چالش‌ها</p>
+                    </header>
+
+                    <main className="bg-white rounded-2xl shadow p-6 space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h2 className="font-semibold mb-4">وضعیت سیستم</h2>
+                                <div className="space-y-2">
+                                    {testResults.map((result, index) => (
+                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                            <span className="font-medium">{result.test}</span>
+                                            <span className={result.color}>{result.status}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h2 className="font-semibold mb-4">مدیریت داده‌های آزمایشی</h2>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={createTestChallenge}
+                                        className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        ➕ ایجاد چالش آزمایشی
+                                    </button>
+                                    <button
+                                        onClick={clearTestChallenges}
+                                        className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                        🗑️ پاک کردن چالش‌های آزمایشی
+                                    </button>
+                                    <button
+                                        onClick={runTests}
+                                        className="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
+                                        🔄 بروزرسانی وضعیت
+                                    </button>
+                                </div>
+
+                                {currentUser && (
+                                    <div className="mt-4 p-3 bg-blue-50 rounded">
+                                        <p className="text-sm text-blue-800">
+                                            <strong>کاربر فعلی:</strong> {currentUser.name}
+                                            <br />
+                                            <strong>نقش:</strong> {currentUser.role === 'SEEKER' ? 'جستجوگر' : currentUser.role === 'SOLVER' ? 'حل‌کننده' : currentUser.role}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="border-t pt-6">
+                            <h2 className="font-semibold mb-4">چالش‌های موجود</h2>
+                            {challenges.length > 0 ? (
+                                <div className="space-y-3">
+                                    {challenges.slice(0, 5).map(challenge => (
+                                        <div key={challenge.id} className="p-3 border rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <h3 className="font-medium text-sm">{challenge.title}</h3>
+                                                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">{challenge.problem}</p>
+                                                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                                        <span>🏷️ {challenge.category}</span>
+                                                        <span>💰 {challenge.reward.toLocaleString('fa-IR')} تومان</span>
+                                                        <span className={`px-2 py-1 rounded ${
+                                                            challenge.status === 'published' ? 'bg-green-100 text-green-800' :
+                                                            challenge.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                                                            'bg-gray-100 text-gray-800'
+                                                        }`}>
+                                                            {challenge.status === 'published' ? 'منتشر شده' :
+                                                             challenge.status === 'draft' ? 'پیش‌نویس' :
+                                                             challenge.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {challenges.length > 5 && (
+                                        <p className="text-sm text-gray-500 text-center">
+                                            و {challenges.length - 5} چالش دیگر...
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-center py-4">هیچ چالشی وجود ندارد</p>
+                            )}
+                        </div>
+
+                        <div className="border-t pt-6">
+                            <h2 className="font-semibold mb-4">راهنمای تست</h2>
+                            <div className="space-y-4">
+                                <div className="p-4 bg-blue-50 rounded">
+                                    <h3 className="font-medium text-blue-800 mb-2">🎯 تست ایجاد چالش:</h3>
+                                    <ol className="list-decimal pr-5 text-blue-700 text-sm space-y-1">
+                                        <li>با حساب جستجوگر وارد شوید (info@parstech.ir)</li>
+                                        <li>به صفحه "ایجاد چالش" بروید</li>
+                                        <li>فرم را پر کرده و ذخیره کنید</li>
+                                        <li>چالش در کاتالوگ نمایش داده شود</li>
+                                        <li>در صفحه "چالش‌های من" قابل مشاهده باشد</li>
+                                    </ol>
+                                </div>
+
+                                <div className="p-4 bg-green-50 rounded">
+                                    <h3 className="font-medium text-green-800 mb-2">🔍 تست جستجو و فیلتر:</h3>
+                                    <ol className="list-decimal pr-5 text-green-700 text-sm space-y-1">
+                                        <li>به صفحه کاتالوگ چالش‌ها بروید</li>
+                                        <li>در نوار جستجو کلمه‌ای تایپ کنید</li>
+                                        <li>دسته‌بندی را تغییر دهید</li>
+                                        <li>مرتب‌سازی را امتحان کنید</li>
+                                        <li>بین حالت شبکه و لیست جابجا شوید</li>
+                                    </ol>
+                                </div>
+
+                                <div className="p-4 bg-purple-50 rounded">
+                                    <h3 className="font-medium text-purple-800 mb-2">📝 تست ویرایش چالش:</h3>
+                                    <ol className="list-decimal pr-5 text-purple-700 text-sm space-y-1">
+                                        <li>چالش خود را در "چالش‌های من" پیدا کنید</li>
+                                        <li>روی دکمه "ویرایش" کلیک کنید</li>
+                                        <li>تغییراتی اعمال کنید</li>
+                                        <li>چالش را ذخیره کنید</li>
+                                        <li>تغییرات در کاتالوگ نمایش داده شود</li>
+                                    </ol>
+                                </div>
+
+                                <div className="p-4 bg-orange-50 rounded">
+                                    <h3 className="font-medium text-orange-800 mb-2">🚀 تست حل چالش:</h3>
+                                    <ol className="list-decimal pr-5 text-orange-700 text-sm space-y-1">
+                                        <li>با حساب حل‌کننده وارد شوید</li>
+                                        <li>چالش را در کاتالوگ پیدا کنید</li>
+                                        <li>روی "مشاهده جزئیات" کلیک کنید</li>
+                                        <li>دکمه "حل این چالش" باید نمایش داده شود</li>
+                                        <li>پیام "در مرحله بعدی پیاده‌سازی خواهد شد" نشان داده شود</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 className="font-medium text-yellow-800 mb-2">⚠️ نکات مهم:</h3>
+                            <ul className="list-disc pr-5 text-yellow-700 text-sm space-y-1">
+                                <li>فقط کاربران با نقش "جستجوگر" می‌توانند چالش ایجاد کنند</li>
+                                <li>چالش‌ها باید وضعیت "منتشر شده" داشته باشند تا در کاتالوگ نمایش داده شوند</li>
+                                <li>مهلت ارسال باید در آینده باشد</li>
+                                <li>جستجو در عنوان، توضیح مسئله و برچسب‌ها کار می‌کند</li>
+                                <li>حل‌کنندگان می‌توانند چالش‌ها را مشاهده کنند اما نمی‌توانند ویرایش کنند</li>
+                                <li>جستجوگران می‌توانند چالش‌های خود را ویرایش کنند</li>
+                            </ul>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<TestChallenges />);
+    </script>
+</body>
+</html>

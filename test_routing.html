@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست مسیریابی - TESTA</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Simple test to verify routing functionality
+        function TestRouter() {
+            const [testResults, setTestResults] = React.useState([]);
+            
+            const runTests = () => {
+                const results = [];
+                
+                // Test 1: Check if hash routing is working
+                const currentHash = window.location.hash;
+                results.push({ 
+                    test: 'Current Hash', 
+                    status: `Current: "${currentHash}"`, 
+                    color: 'text-blue-600' 
+                });
+                
+                // Test 2: Check available routes
+                const availableRoutes = ['#home', '#challenges', '#testa'];
+                results.push({ 
+                    test: 'Available Routes', 
+                    status: availableRoutes.join(', '), 
+                    color: 'text-green-600' 
+                });
+                
+                setTestResults(results);
+            };
+            
+            const testRoute = (route) => {
+                window.location.hash = route;
+                setTimeout(() => {
+                    runTests();
+                }, 100);
+            };
+            
+            React.useEffect(() => {
+                runTests();
+                
+                // Listen for hash changes
+                const handleHashChange = () => {
+                    runTests();
+                };
+                
+                window.addEventListener('hashchange', handleHashChange);
+                return () => window.removeEventListener('hashchange', handleHashChange);
+            }, []);
+            
+            return (
+                <div className="max-w-4xl mx-auto p-6">
+                    <header className="mb-6">
+                        <h1 className="text-2xl font-bold">تست مسیریابی Hash Router</h1>
+                        <p className="text-gray-600 mt-2">بررسی عملکرد سیستم مسیریابی</p>
+                    </header>
+                    
+                    <main className="bg-white rounded-2xl shadow p-6 space-y-6">
+                        <div className="flex gap-4 mb-6">
+                            <button 
+                                onClick={() => testRoute('home')}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                🏠 تست خانه
+                            </button>
+                            <button 
+                                onClick={() => testRoute('challenges')}
+                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            >
+                                🎯 تست چالش‌ها
+                            </button>
+                            <button 
+                                onClick={() => testRoute('testa')}
+                                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+                            >
+                                🎪 تست TESTA
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            {testResults.map((result, index) => (
+                                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <span className="font-medium">{result.test}</span>
+                                    <span className={result.color}>{result.status}</span>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="p-4 bg-blue-50 rounded">
+                            <h3 className="font-semibold mb-2">نحوه تست:</h3>
+                            <ol className="list-decimal pr-5 space-y-1 text-sm">
+                                <li>روی دکمه‌های بالا کلیک کنید تا مسیر تغییر کند</li>
+                                <li>URL در مرورگر باید تغییر کند (مثلاً #home, #challenges)</li>
+                                <li>صفحه اصلی را باز کنید و مسیرهای مختلف را تست کنید</li>
+                                <li>با F5 صفحه را reload کنید - باید روی همان مسیر بماند</li>
+                                <li>از دکمه‌های Forward/Back مرورگر استفاده کنید</li>
+                            </ol>
+                        </div>
+
+                        <div className="p-4 bg-green-50 rounded">
+                            <h3 className="font-semibold mb-2">لینک‌های مستقیم:</h3>
+                            <div className="space-y-2">
+                                <a href="index.html#home" className="block text-blue-600 hover:underline">
+                                    🏠 صفحه خانه
+                                </a>
+                                <a href="index.html#challenges" className="block text-blue-600 hover:underline">
+                                    🎯 صفحه چالش‌ها
+                                </a>
+                                <a href="index.html#testa" className="block text-blue-600 hover:underline">
+                                    🎪 صفحه TESTA
+                                </a>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+        
+        ReactDOM.createRoot(document.getElementById("root")).render(<TestRouter />);
+    </script>
+</body>
+</html>

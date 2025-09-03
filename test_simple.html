@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESTA - Test Simple</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function SimpleApp() {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <div className="bg-white rounded-xl shadow-xl p-8 max-w-md mx-4">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                            🎪 TESTA Platform
+                        </h1>
+                        <p className="text-gray-600 text-center mb-6">
+                            سیستم به درستی کار می‌کند!
+                        </p>
+                        <div className="flex gap-4">
+                            <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                ورود
+                            </button>
+                            <button className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                                ثبت‌نام
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SimpleApp />);
+    </script>
+</body>
+</html>
+
+

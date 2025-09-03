@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست ذخیره‌سازی - TESTA</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Simple test to verify localStorage functionality
+        function TestStorage() {
+            const [testResults, setTestResults] = React.useState([]);
+            
+            const runTests = () => {
+                const results = [];
+                
+                // Test 1: Check if localStorage is available
+                try {
+                    localStorage.setItem('test', 'value');
+                    const retrieved = localStorage.getItem('test');
+                    localStorage.removeItem('test');
+                    
+                    if (retrieved === 'value') {
+                        results.push({ test: 'localStorage Available', status: '✓ PASS', color: 'text-green-600' });
+                    } else {
+                        results.push({ test: 'localStorage Available', status: '✗ FAIL', color: 'text-red-600' });
+                    }
+                } catch (e) {
+                    results.push({ test: 'localStorage Available', status: '✗ FAIL', color: 'text-red-600' });
+                }
+                
+                // Test 2: Check if main app data exists
+                const keys = ['users', 'orgs', 'challenges', 'submissions', 'messages', 'events', 'exhibitors', 'notifications', 'reputationEvents', 'settings', 'session', 'seeded'];
+                let allKeysExist = true;
+                
+                keys.forEach(key => {
+                    if (!localStorage.getItem(key)) {
+                        allKeysExist = false;
+                    }
+                });
+                
+                if (allKeysExist) {
+                    results.push({ test: 'All Data Keys Exist', status: '✓ PASS', color: 'text-green-600' });
+                } else {
+                    results.push({ test: 'All Data Keys Exist', status: '✗ FAIL', color: 'text-red-600' });
+                }
+                
+                // Test 3: Check data counts
+                try {
+                    const users = JSON.parse(localStorage.getItem('users') || '[]');
+                    const challenges = JSON.parse(localStorage.getItem('challenges') || '[]');
+                    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
+                    
+                    if (users.length >= 3) {
+                        results.push({ test: 'Users Data (≥3)', status: `✓ PASS (${users.length})`, color: 'text-green-600' });
+                    } else {
+                        results.push({ test: 'Users Data (≥3)', status: `✗ FAIL (${users.length})`, color: 'text-red-600' });
+                    }
+                    
+                    if (challenges.length >= 1) {
+                        results.push({ test: 'Challenges Data (≥1)', status: `✓ PASS (${challenges.length})`, color: 'text-green-600' });
+                    } else {
+                        results.push({ test: 'Challenges Data (≥1)', status: `✗ FAIL (${challenges.length})`, color: 'text-red-600' });
+                    }
+                    
+                    if (submissions.length >= 1) {
+                        results.push({ test: 'Submissions Data (≥1)', status: `✓ PASS (${submissions.length})`, color: 'text-green-600' });
+                    } else {
+                        results.push({ test: 'Submissions Data (≥1)', status: `✗ FAIL (${submissions.length})`, color: 'text-red-600' });
+                    }
+                } catch (e) {
+                    results.push({ test: 'Data Parsing', status: '✗ FAIL', color: 'text-red-600' });
+                }
+                
+                setTestResults(results);
+            };
+            
+            React.useEffect(() => {
+                runTests();
+            }, []);
+            
+            return (
+                <div className="max-w-4xl mx-auto p-6">
+                    <header className="mb-6">
+                        <h1 className="text-2xl font-bold">تست ذخیره‌سازی localStorage</h1>
+                        <p className="text-gray-600 mt-2">بررسی عملکرد ذخیره‌سازی و داده‌های نمونه</p>
+                    </header>
+                    
+                    <main className="bg-white rounded-2xl shadow p-6">
+                        <div className="mb-4">
+                            <button 
+                                onClick={runTests}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                اجرای مجدد تست‌ها
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            {testResults.map((result, index) => (
+                                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <span className="font-medium">{result.test}</span>
+                                    <span className={result.color}>{result.status}</span>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-6 p-4 bg-blue-50 rounded">
+                            <h3 className="font-semibold mb-2">نحوه تست:</h3>
+                            <ol className="list-decimal pr-5 space-y-1 text-sm">
+                                <li>صفحه اصلی را باز کنید و دکمه "Reset Demo" را بزنید</li>
+                                <li>این صفحه را refresh کنید تا تست‌ها مجدداً اجرا شوند</li>
+                                <li>تمام تست‌ها باید PASS باشند</li>
+                                <li>با reload صفحه اصلی، داده‌ها باید حفظ شوند</li>
+                            </ol>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+        
+        ReactDOM.createRoot(document.getElementById("root")).render(<TestStorage />);
+    </script>
+</body>
+</html>
